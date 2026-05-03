@@ -1,0 +1,54 @@
+# macOS / editor noise
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs and temporary output
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Generated backups / local app copies
+.backup/
+backups/
+Claude-zh-CN-backup/
+*.app/
+claude-desktop_mac-zh_cn/
+
+# Local Claude/Codex state
+.claude/
+.codex/
+
+# Node tooling, if added later
+node_modules/
+dist/
+build/
