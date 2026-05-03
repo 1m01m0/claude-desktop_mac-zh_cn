@@ -298,6 +298,14 @@ Developer -> Configure third-party inference
 - 当前测试脚本仍需要继续整理，建议发布前补齐 macOS 脚本的回归测试。
 - 使用汉化副本时，最好只保留一个最终副本，避免 LaunchServices 或 Dock 中出现多个 Claude。
 
+## 免责声明
+
+本项目仅供个人学习与研究使用，不得用于任何商业目的。使用者应自行承担因修改 Claude Desktop 应用程序包而产生的所有风险，包括但不限于软件崩溃、数据丢失、账户封禁或违反 Anthropic 服务条款。本项目作者不对因使用本项目代码、资源或脚本而导致的任何直接或间接损失承担责任。
+
+## 许可
+
+本项目仅限个人非商业使用。未经授权，禁止将本项目任何内容用于商业用途。详见 [LICENSE.md](LICENSE.md)。
+
 ## 参考来源
 
 - [javaht/claude-desktop-zh-cn](https://github.com/javaht/claude-desktop-zh-cn) — 中文翻译资源

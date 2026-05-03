@@ -1,21 +1,18 @@
-MIT License
+本项目仅限个人非商业使用（Personal, Non-Commercial Use Only）。
 
-Copyright (c) 2025
+## 允许
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+- 个人学习、研究、测试使用
+- 在个人设备上运行和修改
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+## 禁止
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+未经作者明确书面授权，禁止以下行为：
+
+- 将本项目任何内容用于商业用途，包括但不限于商业培训、商业服务、商业产品、商业分发
+- 将本项目整体或部分作为商业产品或服务的一部分进行销售、许可或出租
+- 以任何形式再授权、转售或用于营利目的
+
+## 免责声明
+
+本软件按"原样"提供，不作任何明示或默示的保证，包括但不限于对适销性、特定用途适用性和非侵权的保证。在任何情况下，作者或版权持有人均不对因使用本软件而产生的任何索赔、损害或其他责任负责，无论是合同、侵权还是其他原因。
