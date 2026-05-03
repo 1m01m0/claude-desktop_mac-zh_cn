@@ -6,29 +6,6 @@
 
 > 本项目不是 Anthropic 官方发布内容。请只在你自己的设备上使用，并自行承担修改本地 app bundle 的兼容性风险。
 
-## 效果展示
-
-<table>
-<tr>
-<td align="center"><b>Cowork / Code 面板</b></td>
-<td align="center"><b>设置页面</b></td>
-</tr>
-<tr>
-<td><img src="README.assets/screenshot-cowork.png" alt="主界面" width="400"/></td>
-<td><img src="README.assets/screenshot-settings.png" alt="设置页面" width="400"/></td>
-</tr>
-<tr>
-<td align="center"><b>第三方推理配置</b></td>
-<td align="center"><b>字体设置</b></td>
-</tr>
-<tr>
-<td><img src="README.assets/screenshot-3p.png" alt="第三方推理配置" width="400"/></td>
-<td><img src="README.assets/screenshot-code.png" alt="字体设置" width="400"/></td>
-</tr>
-</table>
-
-截图会随 Claude Desktop 版本变化而略有差异。Claude 更新后通常需要重新运行补丁。
-
 ## 适用环境
 
 - macOS
@@ -326,10 +303,3 @@ Developer -> Configure third-party inference
 - [javaht/claude-desktop-zh-cn](https://github.com/javaht/claude-desktop-zh-cn) — 中文翻译资源
 - [Jyy1529/claude-desktop_win-zh_cn](https://github.com/Jyy1529/claude-desktop_win-zh_cn) — Windows 版实现参考
 
-## 许可
-
-见 [LICENSE.md](LICENSE.md)。
-
-## 致谢
-
-感谢 LINUX DO 社区的分享与讨论。
