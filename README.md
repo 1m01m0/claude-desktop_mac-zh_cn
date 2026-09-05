@@ -1,140 +1,86 @@
-# Claude Desktop macOS 中文补丁（zh-CN）
+# Claude Desktop macOS 中文补丁
 
-一个面向 macOS 版 Claude Desktop 的简体中文资源与补丁项目。
+为 macOS 版 Claude Desktop 添加简体中文资源、语言白名单补丁、部分硬编码界面翻译，以及可切换的中文字体设置。
 
-本项目会写入 Claude Desktop 的中文 i18n JSON 资源，修补前端语言白名单，并对少量没有走 i18n 的 JS chunk 硬编码文案做中文替换。同时注入一个中文字体运行时，方便在 Claude Desktop 右下角通过「字体」按钮调整中文显示效果。
+本项目是非官方的本地应用补丁。代码和资源按 [个人非商业许可](LICENSE.md) 提供；修改应用包会受到 Claude 版本和 macOS 权限的影响。
 
-> 本项目不是 Anthropic 官方发布内容。请只在你自己的设备上使用，并自行承担修改本地 app bundle 的兼容性风险。
+## 功能与适用环境
 
-## 适用环境
+- 写入桌面壳层、前端和 Statsig 中文 JSON 资源。
+- 在前端入口脚本的语言白名单中加入 `zh-CN`。
+- 替换已知 JS chunk 中的部分导航文案。
+- 注入右下角「字体」按钮，支持系统字体、自定义字体名及本地 `.ttf`／`.otf` 文件。
 
-- macOS
-- 已安装 Claude Desktop，通常位于 `/Applications/Claude.app`
-- 已安装 Python 3
-- 当前资源和 chunk 补丁在 Claude Desktop `1.5354.0` 上验证过
+需要 macOS、Python 3 和已安装的 Claude Desktop，默认应用路径为 `/Applications/Claude.app`。项目此前记录的验证版本为 **1.5354.0**；这不代表适配后续所有版本。变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
-## 推荐安装方式
+## 快速开始：创建汉化副本
 
-macOS 近几个版本会对 `/Applications/*.app` 施加更严格的应用管理保护。有些机器即使用 `sudo` 或 AppleScript 管理员授权，仍可能在写入 `/Applications/Claude.app` 时遇到：
-
-```text
-PermissionError: [Errno 1] Operation not permitted
-```
-
-因此本项目推荐两种方式：
-
-- **方式 A：直接修改原版 `/Applications/Claude.app`**
-  适合你的终端已经有权限写入 app bundle 的情况。优点是只有一个 Claude app；缺点是 Claude 更新后补丁会被覆盖。
-
-- **方式 B：创建一个用户目录里的汉化副本**
-  适合遇到 macOS 权限保护、公司 MDM 限制，或想保留原版 app 的情况。推荐最终保留：
-  - `/Applications/Claude.app`：原版
-  - `~/Applications/Claude-zh-CN.app`：汉化版
-
-### 方式 A：直接修改原版
-
-进入项目目录：
+此方式保留原版应用包，方便遇到兼容问题时切回原版。副本与原版仍可能共享用户配置，不等于隔离的用户环境。
 
 ```bash
-cd /path/to/claude-desktop_mac-zh_cn
-chmod +x claude-zh-cn.sh
-./claude-zh-cn.sh
+git clone https://github.com/1m01m0/claude-desktop_mac-zh_cn.git
+cd claude-desktop_mac-zh_cn
+python3 tools/validate_resources.py
 ```
 
-菜单中选择「安装中文补丁」。脚本会自动：
-
-1. 查找 Claude Desktop 的 Resources 目录。
-2. 关闭正在运行的 Claude。
-3. 写入 zh-CN JSON 资源。
-4. 修补语言白名单。
-5. 替换部分硬编码英文 UI 标签。
-6. 注入中文字体设置按钮。
-7. 写入 `locale=zh-CN`。
-8. 将原始文件备份到 `~/Library/Application Support/Claude-zh-CN-backup/`。
-
-也可以直接运行底层脚本：
+退出 Claude，确认 `~/Applications/Claude-zh-CN.app` 不是需要保留的已有副本，再复制：
 
 ```bash
-sudo python3 patch_claude_mac_json_only.py --app-dir /Applications/Claude.app/Contents/Resources
-sudo python3 patch_chunks_mac.py --app-dir /Applications/Claude.app/Contents/Resources
-```
-
-如果这一步出现 `Operation not permitted`，请改用方式 B。
-
-### 方式 B：创建汉化副本
-
-这种方式不修改 `/Applications/Claude.app` 本体，而是在用户目录中创建一个汉化版副本。
-
-```bash
-cd /path/to/claude-desktop_mac-zh_cn
-
-# 关闭 Claude，避免正在运行的 app bundle 被系统保护或缓存
-pkill -x Claude 2>/dev/null || true
-
-# 创建副本。--noextattr / --noqtn 能减少从 /Applications 复制过来的保护属性
+mkdir -p "$HOME/Applications"
 ditto --noextattr --noqtn --noacl --nopersistRootless \
   /Applications/Claude.app \
   "$HOME/Applications/Claude-zh-CN.app"
 
-# 给副本打中文资源补丁
 python3 patch_claude_mac_json_only.py \
   --app-dir "$HOME/Applications/Claude-zh-CN.app/Contents/Resources"
-
-# 给副本打 JS chunk 和字体运行时补丁
 python3 patch_chunks_mac.py \
   --app-dir "$HOME/Applications/Claude-zh-CN.app/Contents/Resources"
 
-# 启动汉化版
 open -n "$HOME/Applications/Claude-zh-CN.app"
 ```
 
-如果你之前已经启动过某个汉化副本，macOS 可能也会对那个副本加上保护属性，导致后续补丁写入失败。最稳妥的做法是重新从原版复制一个干净副本，并在第一次启动前把所有补丁一次性打完。
+在副本第一次启动前完成两个补丁步骤。检查每条命令的输出；白名单或 chunk 未匹配时，不能仅凭资源文件已复制判断全部成功。
 
-## 安装后如何确认
+### 直接修改原版
 
-可以用这些方式确认补丁是否生效：
+若终端有权写入原版应用包，可运行交互菜单：
 
 ```bash
-# 检查中文资源是否存在
+bash claude-zh-cn.sh
+```
+
+选择安装、状态检查或卸载。安装流程会关闭 Claude 并请求管理员权限。若出现 `Operation not permitted`，先检查终端的应用管理权限，或采用用户目录副本方式；`sudo` 不保证能绕过系统保护。
+
+脚本使用 `Path.home()` 定位备份与用户配置。管理员身份运行时，实际主目录可能与当前登录用户不同，应核对输出和目标路径，避免把配置写入错误用户目录。
+
+## 安装后检查
+
+1. 确认运行的是预期应用，可用 `pgrep -fl Claude` 查看进程路径。
+2. 检查「新建会话」「已安排」「自定义」「已固定」「最近」等导航文案。
+3. 检查右下角「字体」按钮是否存在并可操作。
+4. 如果仍显示英文，核对实际用户数据目录及 `locale`。
+
+资源文件检查示例（副本方式）：
+
+```bash
 test -f "$HOME/Applications/Claude-zh-CN.app/Contents/Resources/zh-CN.json"
 test -f "$HOME/Applications/Claude-zh-CN.app/Contents/Resources/ion-dist/i18n/zh-CN.json"
-
-# 检查语言白名单是否包含 zh-CN
-rg '"zh-CN"' "$HOME/Applications/Claude-zh-CN.app/Contents/Resources/ion-dist/assets/v1/index-"*.js
-
-# 检查当前运行的 Claude 路径
-pgrep -fl Claude
+test -f "$HOME/Applications/Claude-zh-CN.app/Contents/Resources/ion-dist/i18n/statsig/zh-CN.json"
 ```
 
-正常情况下，Claude 启动参数中会包含 `--lang=zh-CN`，界面中应能看到「新建会话」「已安排」「自定义」「已固定」「最近」等中文文案，右下角会出现「字体」按钮。
+这些检查确认文件存在，不代表所有界面均已翻译。
 
-## 3P / 第三方推理模式说明
+## 用户配置与字体
 
-如果你使用 Claude Desktop 的第三方推理模式，Claude 可能使用下面这个用户数据目录：
+资源脚本默认修改当前执行用户的：
 
 ```text
-~/Library/Application Support/Claude-3p/
+~/Library/Application Support/Claude/config.json
 ```
 
-普通官方模式通常使用：
+该文件存在且能解析时，脚本写入 `locale=zh-CN`；缺失或无法解析时会跳过。字体设置使用浏览器 `localStorage`，并通过 `claudeZhCnFont` 配置字段提供镜像。
 
-```text
-~/Library/Application Support/Claude/
-```
-
-补丁脚本会写入 `~/Library/Application Support/Claude/config.json` 的 `locale=zh-CN`。如果你启动后仍然看到英文，检查你实际运行进程的 `--user-data-dir`：
-
-```bash
-pgrep -fl Claude
-```
-
-如果进程使用的是 `Claude-3p`，请确认这里也有 `locale`：
-
-```bash
-python3 -m json.tool "$HOME/Library/Application Support/Claude-3p/config.json"
-```
-
-缺少时可以手动加入：
+第三方推理模式可能使用 `~/Library/Application Support/Claude-3p/`。先检查实际进程的 `--user-data-dir`，再备份并编辑对应 `config.json`，将以下字段合并到现有对象中，保留其他配置：
 
 ```json
 {
@@ -142,172 +88,80 @@ python3 -m json.tool "$HOME/Library/Application Support/Claude-3p/config.json"
 }
 ```
 
-## 项目结构
+本补丁不配置推理服务或 API 凭证。
+
+## 备份、恢复与更新
+
+补丁备份位于执行用户的：
 
 ```text
-.
-├── claude-zh-cn.sh                    # 交互式安装 / 卸载 / 状态检查入口
-├── resources/
-│   ├── desktop-zh-CN.json             # 桌面壳层翻译
-│   ├── frontend-zh-CN.json            # 前端界面翻译
-│   └── statsig-zh-CN.json             # Statsig 功能描述翻译
-├── tools/
-│   ├── validate_resources.py          # 校验资源 JSON 合法性
-│   ├── check_i18n_coverage.py         # 检查疑似未翻译条目
-│   └── test_patch_behaviors.py        # 补丁行为回归测试
-├── patch_claude_mac_json_only.py      # JSON 资源和语言白名单补丁
-├── patch_chunks_mac.py                # JS chunk 文案和字体运行时补丁
-├── restore_claude_mac.py              # 从备份恢复 / 清理中文补丁
-├── README.md
-├── CHANGELOG.md
-└── LICENSE.md
+~/Library/Application Support/Claude-zh-CN-backup/
+├── json-only/
+└── chunks/
 ```
 
-## 翻译覆盖率
+备份按文件相对路径保存，不按应用版本或副本路径隔离。更新版本前保留独立的原版应用备份；不要假定一个备份目录可正确恢复任意版本或多个副本。
 
-| 资源文件 | 英文 keys | 中文 keys | 覆盖率 |
-| --- | ---: | ---: | ---: |
-| desktop-zh-CN.json | 355 | 355 | 100% |
-| frontend-zh-CN.json | 12325 | 12326 | 100% |
-| statsig-zh-CN.json | 46 | 46 | 100% |
+### 恢复补丁
 
-资源文件中的可翻译条目已尽量汉化。Claude、Anthropic、Google、GitHub、MCP、模型名、快捷键、代码符号和格式占位符会按语境保留英文。
-
-## 脚本具体做了什么
-
-`patch_claude_mac_json_only.py` 会：
-
-1. 检查目标 Resources 目录中是否存在 `en-US.json`。
-2. 复制 `resources/desktop-zh-CN.json` 到 `zh-CN.json`。
-3. 复制 `resources/frontend-zh-CN.json` 到 `ion-dist/i18n/zh-CN.json`。
-4. 复制 `resources/statsig-zh-CN.json` 到 `ion-dist/i18n/statsig/zh-CN.json`。
-5. 在 `ion-dist/assets/v1/index-*.js` 中把 `zh-CN` 加入语言白名单。
-6. 写入用户配置 `locale=zh-CN`。
-7. 首次修改前备份原文件。
-
-`patch_chunks_mac.py` 会：
-
-1. 对已知 chunk 前缀做中文替换，例如 `c71860c77-*.js` 和 `cbc59a8af-*.js`。
-2. 对当前版本分散到其他 chunk 的常见导航文案做兜底替换。
-3. 在 `index-*.js` 注入中文字体运行时。
-4. 只在文件真正发生变化时备份原文件，避免把几百个无关 JS 全塞进备份目录。
-
-## 中文字体自定义
-
-补丁安装后，Claude Desktop 右下角会出现「字体」浮动按钮。点击后可以选择：
-
-- 苹方 (PingFang SC)
-- 黑体 (Heiti SC)
-- 宋体 (Songti SC)
-- 自定义系统字体名
-- 导入本地 `.ttf` / `.otf` 字体文件
-
-字体配置会保存在浏览器 `localStorage` 中，并镜像到配置文件的 `claudeZhCnFont` 字段。
-
-## 卸载 / 恢复
-
-### 如果你直接修改了原版 `/Applications/Claude.app`
-
-运行：
+退出 Claude，针对实际打补丁的 Resources 目录运行：
 
 ```bash
-sudo python3 restore_claude_mac.py --app-dir /Applications/Claude.app/Contents/Resources
+python3 restore_claude_mac.py \
+  --app-dir "$HOME/Applications/Claude-zh-CN.app/Contents/Resources"
 ```
 
-恢复脚本会：
+修改原版时将路径换为 `/Applications/Claude.app/Contents/Resources`，并确保写入权限及备份所在用户一致。
 
-1. 从 `~/Library/Application Support/Claude-zh-CN-backup/` 恢复原始文件。
-2. 删除 zh-CN 资源文件。
-3. 从语言白名单移除 `zh-CN`。
-4. 移除 `locale` 和 `claudeZhCnFont` 配置。
+恢复脚本在有备份时还原备份文件；没有备份时尝试删除中文资源并清理白名单，同时移除默认用户配置中的 `locale` 和 `claudeZhCnFont`。它不会保证删除所有新建资源或还原没有备份的硬编码替换。恢复后应检查实际界面；有疑问时使用干净原版应用。
 
-### 如果你使用的是汉化副本
+使用副本时，也可以退出应用后通过 Finder 移除副本，再打开原版。移除副本不会自动清除共享用户配置。
 
-关闭 Claude 后删除副本即可：
+### Claude 更新后
 
-```bash
-pkill -x Claude 2>/dev/null || true
-rm -rf "$HOME/Applications/Claude-zh-CN.app"
-```
+1. 先确认未修改的新版应用能正常启动。
+2. 保存需要保留的备份，重新创建干净副本。
+3. 运行两个补丁脚本，检查未匹配或跳过提示。
+4. 验证中文导航和字体功能。
 
-原版 `/Applications/Claude.app` 不会受到影响。
+新版 JS 文件名、结构和翻译 key 可能变化；重新运行旧补丁不一定能解决新增英文文案，需要更新资源或 chunk 匹配规则。
 
-## 更新 Claude 后怎么做
+## 项目结构与维护
 
-Claude Desktop 更新后，`ion-dist/assets/v1/*.js` 的文件名和内容 hash 经常会变化。推荐流程：
+| 路径 | 用途 |
+| --- | --- |
+| [claude-zh-cn.sh](claude-zh-cn.sh) | 交互式安装、卸载、状态检查 |
+| [resources/](resources/) | 桌面、前端、Statsig 翻译资源 |
+| [patch_claude_mac_json_only.py](patch_claude_mac_json_only.py) | JSON 资源、白名单与 locale |
+| [patch_chunks_mac.py](patch_chunks_mac.py) | 硬编码文案与字体运行时 |
+| [restore_claude_mac.py](restore_claude_mac.py) | 从备份恢复及配置清理 |
+| [tools/](tools/) | 资源验证、覆盖检查和历史行为测试 |
 
-1. 确认新版 Claude 可以正常启动。
-2. 如果使用原版补丁方式，重新运行安装脚本。
-3. 如果使用汉化副本方式，从新版 `/Applications/Claude.app` 重新复制一个副本。
-4. 在第一次启动副本前运行两个 patch 脚本。
-5. 打开 Claude，检查「新建会话」「已安排」「自定义」「已固定」「最近」等主导航文案。
-
-如果只更新资源 JSON，不更新 chunk 替换规则，可能会出现大部分界面中文但少数导航仍是英文的情况。这通常说明新的 chunk 文件名或文案位置变了，需要更新 `patch_chunks_mac.py`。
-
-## 常见问题
-
-### 为什么 sudo 也写不进 `/Applications/Claude.app`？
-
-这通常是 macOS 的应用管理保护、扩展属性或企业 MDM 策略导致的。报错常见为：
-
-```text
-Operation not permitted
-```
-
-此时建议使用「创建汉化副本」方式。
-
-### 为什么第一次能补，启动后再次补就失败？
-
-app bundle 启动后，macOS 可能会给副本加上额外保护属性，或者 Electron 正在占用部分资源。建议关闭 Claude，必要时重新复制一个干净副本，并在首次启动前一次性打完补丁。
-
-### 为什么界面还有少量英文？
-
-通常有三类原因：
-
-1. 文案来自用户自己的会话标题、项目名、仓库名，不能也不应该自动翻译。
-2. 文案来自 Claude 新版本新增的 i18n key，需要更新资源 JSON。
-3. 文案是 JS chunk 里的硬编码字符串，需要更新 `patch_chunks_mac.py`。
-
-### 如何检查资源 JSON 是否有效？
+提交翻译或补丁变更前运行：
 
 ```bash
 python3 tools/validate_resources.py
 ```
 
-## 第三方推理入口参考
+它验证三个资源文件是合法 JSON 对象，不能证明翻译完整性或新版本兼容性。`tools/test_patch_behaviors.py` 仍引用仓库中不存在的 Windows 脚本，不应将其视为可用的 macOS 回归测试套件。报告兼容问题时附上应用版本、macOS 版本、安装方式和脱敏错误输出。
 
-如果你要使用 Desktop 的第三方推理或本地代理，可以从 Claude 官方菜单进入：
+## 常见问题
 
-```text
-Help -> Troubleshooting -> Enable Developer mode
-Developer -> Configure third-party inference
-```
+| 现象 | 检查方向 |
+| --- | --- |
+| 写入被拒绝 | 退出 Claude，检查应用管理权限；必要时使用干净的用户目录副本 |
+| 资源存在但仍为英文 | 确认运行路径、实际用户数据目录和 locale；检查白名单补丁输出 |
+| 少数导航仍为英文 | 新版 chunk 或 i18n key 变化；用户自己的会话名不会自动翻译 |
+| 字体未变化 | 检查字体按钮是否注入、字体是否可用，以及 localStorage／配置状态 |
+| 更新后失效 | 从新版原版重新创建副本，并检查补丁是否匹配 |
 
-推荐选择 **Gateway**：
+DevTools、Electron 原生菜单和系统级弹窗不一定受前端 i18n 控制。
 
-- Gateway base URL：本地代理地址，例如 `http://127.0.0.1:15721`
-- Gateway API key：例如 `PROXY_MANAGED`
-- Gateway auth scheme：`bearer`
-- Skip login-mode chooser：建议打开
+## 许可与致谢
 
-## 已知限制
+仅限个人学习、研究和非商业使用，商业用途须经作者书面授权。软件按原样提供，完整条款见 [LICENSE.md](LICENSE.md)。
 
-- Claude 更新后通常需要重新打补丁。
-- macOS 可能阻止直接修改 `/Applications/Claude.app`。
-- DevTools、Electron 原生菜单、部分系统级弹窗不一定受前端 i18n 控制。
-- 当前测试脚本仍需要继续整理，建议发布前补齐 macOS 脚本的回归测试。
-- 使用汉化副本时，最好只保留一个最终副本，避免 LaunchServices 或 Dock 中出现多个 Claude。
+保留以下来源致谢：
 
-## 免责声明
-
-本项目仅供个人学习与研究使用，不得用于任何商业目的。使用者应自行承担因修改 Claude Desktop 应用程序包而产生的所有风险，包括但不限于软件崩溃、数据丢失、账户封禁或违反 Anthropic 服务条款。本项目作者不对因使用本项目代码、资源或脚本而导致的任何直接或间接损失承担责任。
-
-## 许可
-
-本项目仅限个人非商业使用。未经授权，禁止将本项目任何内容用于商业用途。详见 [LICENSE.md](LICENSE.md)。
-
-## 参考来源
-
-- [javaht/claude-desktop-zh-cn](https://github.com/javaht/claude-desktop-zh-cn) — 中文翻译资源
-- [Jyy1529/claude-desktop_win-zh_cn](https://github.com/Jyy1529/claude-desktop_win-zh_cn) — Windows 版实现参考
-
+- [javaht/claude-desktop-zh-cn](https://github.com/javaht/claude-desktop-zh-cn)：中文翻译资源。
+- [Jyy1529/claude-desktop_win-zh_cn](https://github.com/Jyy1529/claude-desktop_win-zh_cn)：Windows 实现参考。
