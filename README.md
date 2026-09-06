@@ -6,12 +6,13 @@
 
 > 本项目不是 Anthropic 官方发布内容。请只在你自己的设备上使用，并自行承担修改本地 app bundle 的兼容性风险。
 
-## 适用环境
+## 已知限制
 
-- macOS
-- 已安装 Claude Desktop，通常位于 `/Applications/Claude.app`
-- 已安装 Python 3
-- 当前资源和 chunk 补丁在 Claude Desktop `1.5354.0` 上验证过
+- Claude 更新后通常需要重新打补丁。
+- macOS 可能阻止直接修改 `/Applications/Claude.app`。
+- DevTools、Electron 原生菜单、部分系统级弹窗不一定受前端 i18n 控制。
+- 当前测试脚本仍需要继续整理，建议发布前补齐 macOS 脚本的回归测试。
+- 使用汉化副本时，最好只保留一个最终副本，避免 LaunchServices 或 Dock 中出现多个 Claude。
 
 ## 推荐安装方式
 
@@ -107,6 +108,41 @@ pgrep -fl Claude
 ```
 
 正常情况下，Claude 启动参数中会包含 `--lang=zh-CN`，界面中应能看到「新建会话」「已安排」「自定义」「已固定」「最近」等中文文案，右下角会出现「字体」按钮。
+
+## 卸载 / 恢复
+
+### 如果你直接修改了原版 `/Applications/Claude.app`
+
+运行：
+
+```bash
+sudo python3 restore_claude_mac.py --app-dir /Applications/Claude.app/Contents/Resources
+```
+
+恢复脚本会：
+
+1. 从 `~/Library/Application Support/Claude-zh-CN-backup/` 恢复原始文件。
+2. 删除 zh-CN 资源文件。
+3. 从语言白名单移除 `zh-CN`。
+4. 移除 `locale` 和 `claudeZhCnFont` 配置。
+
+### 如果你使用的是汉化副本
+
+关闭 Claude 后删除副本即可：
+
+```bash
+pkill -x Claude 2>/dev/null || true
+rm -rf "$HOME/Applications/Claude-zh-CN.app"
+```
+
+原版 `/Applications/Claude.app` 不会受到影响。
+
+## 适用环境
+
+- macOS
+- 已安装 Claude Desktop，通常位于 `/Applications/Claude.app`
+- 已安装 Python 3
+- 当前资源和 chunk 补丁在 Claude Desktop `1.5354.0` 上验证过
 
 ## 3P / 第三方推理模式说明
 
@@ -204,34 +240,6 @@ python3 -m json.tool "$HOME/Library/Application Support/Claude-3p/config.json"
 
 字体配置会保存在浏览器 `localStorage` 中，并镜像到配置文件的 `claudeZhCnFont` 字段。
 
-## 卸载 / 恢复
-
-### 如果你直接修改了原版 `/Applications/Claude.app`
-
-运行：
-
-```bash
-sudo python3 restore_claude_mac.py --app-dir /Applications/Claude.app/Contents/Resources
-```
-
-恢复脚本会：
-
-1. 从 `~/Library/Application Support/Claude-zh-CN-backup/` 恢复原始文件。
-2. 删除 zh-CN 资源文件。
-3. 从语言白名单移除 `zh-CN`。
-4. 移除 `locale` 和 `claudeZhCnFont` 配置。
-
-### 如果你使用的是汉化副本
-
-关闭 Claude 后删除副本即可：
-
-```bash
-pkill -x Claude 2>/dev/null || true
-rm -rf "$HOME/Applications/Claude-zh-CN.app"
-```
-
-原版 `/Applications/Claude.app` 不会受到影响。
-
 ## 更新 Claude 后怎么做
 
 Claude Desktop 更新后，`ion-dist/assets/v1/*.js` 的文件名和内容 hash 经常会变化。推荐流程：
@@ -290,24 +298,15 @@ Developer -> Configure third-party inference
 - Gateway auth scheme：`bearer`
 - Skip login-mode chooser：建议打开
 
-## 已知限制
-
-- Claude 更新后通常需要重新打补丁。
-- macOS 可能阻止直接修改 `/Applications/Claude.app`。
-- DevTools、Electron 原生菜单、部分系统级弹窗不一定受前端 i18n 控制。
-- 当前测试脚本仍需要继续整理，建议发布前补齐 macOS 脚本的回归测试。
-- 使用汉化副本时，最好只保留一个最终副本，避免 LaunchServices 或 Dock 中出现多个 Claude。
-
 ## 免责声明
 
 本项目仅供个人学习与研究使用，不得用于任何商业目的。使用者应自行承担因修改 Claude Desktop 应用程序包而产生的所有风险，包括但不限于软件崩溃、数据丢失、账户封禁或违反 Anthropic 服务条款。本项目作者不对因使用本项目代码、资源或脚本而导致的任何直接或间接损失承担责任。
-
-## 许可
-
-本项目仅限个人非商业使用。未经授权，禁止将本项目任何内容用于商业用途。详见 [LICENSE.md](LICENSE.md)。
 
 ## 参考来源
 
 - [javaht/claude-desktop-zh-cn](https://github.com/javaht/claude-desktop-zh-cn) — 中文翻译资源
 - [Jyy1529/claude-desktop_win-zh_cn](https://github.com/Jyy1529/claude-desktop_win-zh_cn) — Windows 版实现参考
 
+## 许可
+
+本项目仅限个人非商业使用。未经授权，禁止将本项目任何内容用于商业用途。详见 [LICENSE.md](LICENSE.md)。
